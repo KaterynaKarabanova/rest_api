@@ -1,14 +1,14 @@
-const contacts = require("../models/contacts");
+const { Contact } = require("../models/contact");
 const { HttpError, ctrlWrapper } = require("../helpers");
 
 const getAll = async (req, res) => {
-  const allContacts = await contacts.listContacts();
+  const allContacts = await Contact.find();
   res.json(allContacts);
 };
 
 const getById = async (req, res) => {
   const { contactId } = req.params;
-  const contactById = await contacts.getContactById(contactId);
+  const contactById = await Contact.findById(contactId);
   if (!contactById) {
     throw HttpError(404, "Not found");
   }
@@ -16,7 +16,7 @@ const getById = async (req, res) => {
 };
 
 const add = async (req, res) => {
-  const addContact = await contacts.addContact(req.body);
+  const addContact = await Contact.create(req.body);
   res.status(201).json(addContact);
 };
 
@@ -25,7 +25,22 @@ const updateById = async (req, res) => {
     throw HttpError(400, "missing fields");
   }
   const { contactId } = req.params;
-  const contactUpdate = await contacts.updateContact(contactId, req.body);
+  const contactUpdate = await Contact.findByIdAndUpdate(contactId, req.body, {
+    new: true,
+  });
+  if (!contactUpdate) {
+    throw HttpError(404, "Not found");
+  }
+  res.json(contactUpdate);
+};
+const updateFav = async (req, res) => {
+  if (Object.keys(req.body).length === 0) {
+    throw HttpError(400, "missing fields");
+  }
+  const { contactId } = req.params;
+  const contactUpdate = await Contact.findByIdAndUpdate(contactId, req.body, {
+    new: true,
+  });
   if (!contactUpdate) {
     throw HttpError(404, "Not found");
   }
@@ -34,7 +49,7 @@ const updateById = async (req, res) => {
 
 const deleteById = async (req, res) => {
   const { contactId } = req.params;
-  const deleteContact = await contacts.removeContact(contactId);
+  const deleteContact = await Contact.findByIdAndDelete(contactId);
   if (!deleteContact) {
     throw HttpError(404, "Not found");
   }
@@ -46,6 +61,7 @@ module.exports = {
   getAll: ctrlWrapper(getAll),
   getById: ctrlWrapper(getById),
   add: ctrlWrapper(add),
+  updateFav: ctrlWrapper(updateFav),
   updateById: ctrlWrapper(updateById),
   deleteById: ctrlWrapper(deleteById),
 };
